@@ -52,9 +52,11 @@ pub fn readCSVIntoIntList(filename: &str) -> Result<Vec<i32>, Box<dyn Error>> {
 pub fn readCSVIntoStringList(filename: &str) -> Result<Vec<Vec<String>>, Box<dyn Error>> {
     let file = File::open(filename)?;
     let mut rdr = csv::ReaderBuilder::new()
+                              .flexible(true)
                               .has_headers(false)
                               .from_reader(file);
     let mut higherVec = Vec::new();
+    
     for result in rdr.records() {
         let mut vec = Vec::new();
         let record = result?;
