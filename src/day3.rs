@@ -6,13 +6,50 @@ use std::io::{self, BufRead};
 use array_tool::vec::Intersect;
 use std::cmp::min;
 
+use std::collections::HashSet;
+use std::iter::FromIterator;
+
 pub fn main(){
     let listWrapped  = common::readCSVIntoStringList("input3.txt");
     let mut list = listWrapped.unwrap();
-    part1(list);
+    let (wire1Vec,wire2Vec) = createWireVecs(list);
+    part1(wire1Vec.clone(),wire2Vec.clone());
+    part2(wire1Vec,wire2Vec);
 }
 
-fn part1(wires:Vec<Vec<String>>){
+
+// im not converting them to HashSets earlier is because i lose locations of repeated coordinates once i convert them 
+// fn part1( wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>) -> Vec<&'static(i32,i32)> {
+fn part1( wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>) {
+    let wire1HashSet = hashset(wire1Vec);
+    let wire2HashSet = hashset(wire2Vec);
+
+    // let intersections = wire1HashSet.intersection(&wire2HashSet);    
+    let intersections = wire1HashSet.intersection(&wire2HashSet).collect::<Vec<&(i32,i32)>>();
+
+    let v:HashSet<(i32)> = intersections.clone().into_iter().map(|x| calcManhattan(*x)).collect();
+    println!("Part 1: {:?}",v.iter().min().unwrap());
+
+    // let mut intersectionHash: HashSet<(i32,i32)> = intersections.from();
+    // return intersections;
+}
+
+fn part2(wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>){
+
+
+}
+
+
+//  _    _        _                      ______                    _    _                    
+// | |  | |      | |                    |  ____|                  | |  (_)                   
+// | |__| |  ___ | | _ __    ___  _ __  | |__  _   _  _ __    ___ | |_  _   ___   _ __   ___ 
+// |  __  | / _ \| || '_ \  / _ \| '__| |  __|| | | || '_ \  / __|| __|| | / _ \ | '_ \ / __|
+// | |  | ||  __/| || |_) ||  __/| |    | |   | |_| || | | || (__ | |_ | || (_) || | | |\__ \
+// |_|  |_| \___||_|| .__/  \___||_|    |_|    \__,_||_| |_| \___| \__||_| \___/ |_| |_||___/
+//                  | |                                                                      
+//                  |_|                                                                      
+
+fn createWireVecs(wires:Vec<Vec<String>>) -> (Vec<(i32,i32)>,Vec<(i32,i32)>) {
     let wire1 = wires[0].to_owned();
     let wire2 = wires[1].to_owned();
     let mut curCoords = (0,0);
@@ -37,16 +74,11 @@ fn part1(wires:Vec<Vec<String>>){
     let wire1CoordArrayFlat : Vec<(i32,i32)> = wire1CoordArray.into_iter().flatten().collect();
     let wire2CoordArrayFlat : Vec<(i32,i32)> = wire2CoordArray.into_iter().flatten().collect();
 
-    println!("Hello");
+    return (wire1CoordArrayFlat,wire2CoordArrayFlat)
 
-    let intersections = wire2CoordArrayFlat.intersect(wire1CoordArrayFlat);
-    println!("{:?}",intersections);
-    
-    let v: Vec<i32> = intersections.into_iter().map(|x| calcManhattan(x)).rev().collect();
-
-    println!("{:?}",v.iter().min().unwrap());
-
-    println!("done");
+    // let w1HashSet = hashset(wire1CoordArrayFlat);
+    // let w2HashSet = hashset(wire2CoordArrayFlat);
+    // return (w1HashSet,w2HashSet)
 }
 
 fn handleDirection(CurrentCoords:(i32,i32), wire:&str) -> Vec<(i32,i32)> {
@@ -68,4 +100,8 @@ fn handleDirection(CurrentCoords:(i32,i32), wire:&str) -> Vec<(i32,i32)> {
 fn calcManhattan(point:(i32,i32)) -> i32 {
     let (x,y) = point;
     return x.abs()+y.abs();
+}
+
+fn hashset(vec: Vec<(i32,i32)>) -> HashSet<((i32,i32))> {
+    HashSet::from_iter(vec)
 }
