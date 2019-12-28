@@ -13,29 +13,42 @@ pub fn main(){
     let listWrapped  = common::readCSVIntoStringList("input3.txt");
     let mut list = listWrapped.unwrap();
     let (wire1Vec,wire2Vec) = createWireVecs(list);
-    part1(wire1Vec.clone(),wire2Vec.clone());
-    part2(wire1Vec,wire2Vec);
+    let intersections = part1(wire1Vec.clone(),wire2Vec.clone());
+    part2(wire1Vec,wire2Vec,intersections);
 }
-
 
 // im not converting them to HashSets earlier is because i lose locations of repeated coordinates once i convert them 
-// fn part1( wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>) -> Vec<&'static(i32,i32)> {
-fn part1( wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>) {
+fn part1( wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>) -> Vec<(i32,i32)>  {
     let wire1HashSet = hashset(wire1Vec);
     let wire2HashSet = hashset(wire2Vec);
-
-    // let intersections = wire1HashSet.intersection(&wire2HashSet);    
     let intersections = wire1HashSet.intersection(&wire2HashSet).collect::<Vec<&(i32,i32)>>();
-
     let v:HashSet<(i32)> = intersections.clone().into_iter().map(|x| calcManhattan(*x)).collect();
     println!("Part 1: {:?}",v.iter().min().unwrap());
-
-    // let mut intersectionHash: HashSet<(i32,i32)> = intersections.from();
-    // return intersections;
+    
+    let mut newIntersections =  Vec::new();
+    for i in intersections{
+        newIntersections.push(*i);   
+    }
+    return newIntersections
 }
 
-fn part2(wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>){
 
+fn part2(wire1Vec: Vec<(i32,i32)> , wire2Vec: Vec<(i32,i32)>,intersections: Vec<(i32,i32)>){
+    // this feels inefficient and can surely be done better
+    let mut smallest = 999999;
+    for i in intersections{
+        let mut wire1Iter = wire1Vec.iter();
+        let mut wire2Iter = wire2Vec.iter();
+        let wire1Steps = wire1Iter.position(|&x| x ==  i).unwrap();
+        let wire2Steps = wire2Iter.position(|&x| x ==  i).unwrap();
+        let combinedSteps = wire1Steps+wire2Steps+2; // one step short for each list
+
+        if combinedSteps < smallest{
+            smallest= combinedSteps;
+        }
+    }
+    println!("Part 2: {:?}",smallest);
+    // 28578
 
 }
 
