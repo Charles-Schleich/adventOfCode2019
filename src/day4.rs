@@ -4,16 +4,18 @@ mod common;
 use std::num::ParseIntError;
 
 pub fn main(){
-    part1();
+    let (set,count) =  part1();
+    part2(set);
 }
 
-fn part1() {
+fn part1() -> (Vec<i32>,i32)  {
 
     let start = 353096; 
     let finish = 843212;
     let mut count = 0;
+    let mut feasible = Vec::new();
 
-    for i in 353096..843212{
+    for i in start..finish{
         let vecNums = i32toVec(i);
         
         let mut increase = true;
@@ -29,14 +31,31 @@ fn part1() {
         }
         if adjacent==true && increase == true {
             count = count+1;
+            feasible.push(i);
         }
         // break;
     }
     println!("Part 1:{}",count);
+    return (feasible,count)
 }
 
-fn part2(){
-                         
+fn part2 (set: Vec<i32>){
+
+    let mut count = 0; 
+    for num in set{
+
+        let mut strNum: &str = &*num.to_string();
+        let counts: Vec<_> = strNum.chars()
+                                    .map(|x| strNum.matches(x).count())
+                                    .collect();
+        let contains2 = counts.contains(&2);
+        if contains2 {
+            count=count+1;
+        }
+    }
+    println!("Part 2: {}",count);
+    // 389 == too high
+    // 190 == too low 
 }
 
 
