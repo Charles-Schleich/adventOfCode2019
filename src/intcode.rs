@@ -1,10 +1,6 @@
-
-
 use std::io::{self, BufRead};
 use std::fs;
 use math::round;
-
-
 
 #[path="./common.rs"]
 mod common ;
@@ -13,17 +9,14 @@ fn incode(mut arr : Vec<i32>)-> i32{
 
     let mut exit = false;
     let mut multOf4 = 0;
-
     // processor in this loop
     while exit!=true{
         let mut op = arr[0 + multOf4];
-
         if op==99 { break; }
         let (posa, posb, posc) = ( arr[1 + multOf4] as usize
                                  , arr[2 + multOf4] as usize
                                  , arr[3 + multOf4] as usize);
         let (a, b) = (arr[posa], arr[posb]);
-
         match op {
             1=>arr[posc]=a+b,
             2=>arr[posc]=a*b,
@@ -35,55 +28,46 @@ fn incode(mut arr : Vec<i32>)-> i32{
     return arr[0];
 }
 
-
-
-fn processOp(op:i32) -> OpCode{
+// fn processOp(op:i32) {
+fn processOp(op:i32) -> OpCode {
     let mut opStr: &str = &*op.to_string();
-    let len = opStr.len();
-    match len {
-        // 1 digit,  ABCDE: ABC = position mode
-        1=> return OpCode{ op:op
-                         , var1Mode:ParamMode::Pos
-                         , var2Mode:ParamMode::Pos
-                         , var3Mode:ParamMode::Pos } , 
-        // 2 digits, ABCDE: ABC = position mode
-        2=> return OpCode{ op:op
-                         , var1Mode:ParamMode::Pos
-                         , var2Mode:ParamMode::Pos
-                         , var3Mode:ParamMode::Pos },   
-        // 3 digits, ABCDE: AB  = position mode,  C = Immediate mode
-        3=> {
-            let onlyOpStr  = &opStr[1..3];
-            let onlyOpInt :i32 = onlyOpStr.parse().unwrap();
+    let mut z = opStr.chars().rev();
+    let (mut A,mut B,mut C) : (ParamMode,ParamMode,ParamMode) = (ParamMode::Pos,ParamMode::Pos,ParamMode::Pos) ;
+    let mut operation = String::from("");
 
-            return OpCode{ op:onlyOpInt
-                         , var1Mode:ParamMode::Pos
-                         , var2Mode:ParamMode::Pos
-                         , var3Mode:ParamMode::Imm};                
+    for i in 0..5 {
+        let character = z.next();
+        if i == 0 || i == 1 {
+            match character{
+                Some(x) => operation.push(x),
+                None =>(),
+            }
+        } else if i == 2 {
+            A = determinParameter(character);
+        } else if i == 3 {
+            B = determinParameter(character);
+        } else if i == 4 {
+            C = determinParameter(character);
+        }
+    }
+
+    let operationNum: i32 = operation.parse().unwrap();
+    return OpCode{op:operationNum,var1Mode:A,var2Mode:B,var3Mode:C};
+}
+
+fn determinParameter(input:Option<char>) -> ParamMode {
+    match input{
+        Some(x)=> match x { 
+            '0' =>  return ParamMode::Pos,
+            '1' => return ParamMode::Imm,
+            other => panic!()
         },
-        // 4 digits, ABCDE: A   = position mode,  B = Immediate mode, C Either
-        4=>{
-            
-            // if opChars[] {
-            // }
-            return OpCode{op:op
-                         ,var1Mode:ParamMode::Pos
-                         ,var2Mode:ParamMode::Imm
-                         ,var3Mode:ParamMode::Imm} //????
-        },                
-        // 4 digits, ABCDE: A   = Immediate mode, CB Either
-        5=>{
-
-            return OpCode{op:op
-                         ,var1Mode:ParamMode::Imm
-                         ,var2Mode:ParamMode::Imm    //????
-                         ,var3Mode:ParamMode::Imm}   //????
-        },                
-        other=>panic!(),
+        None=> return ParamMode::Pos,
     }
 }
 
 // STRUCTS
+#[derive(Debug)]
 struct OpCode {
     op: i32,
     var1Mode: ParamMode,
@@ -91,10 +75,14 @@ struct OpCode {
     var3Mode: ParamMode
 }
 
+#[derive(Debug)]
 enum ParamMode {
     Imm,
     Pos,
 }
+
+
+
 
 
 // 1002,4,3,4,33

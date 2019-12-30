@@ -18,24 +18,5 @@ fn main() {
     // day3::main();    
     // day4::main();    
     // day5::main();    
-
-    //      "ABCDE";
-    // let x = "10101";
-    let x = "1101";
-    let hello  = &x[2..4];
-    let hello2 :i32 = hello.parse().unwrap();
-
-
-    // learning how to do apply
-    // let y = "1101";
-    // let bye:i32  = &x[2..4]
-    //                .apply(|x| x.parse().unwrap()) ;
-    // let bye2 :i32 = ;
-
  
-    println!("{}",hello);
-    
-    // let mut y: Vec<_> = x.chars().take(3).collect();
-    // println!("{:?}",y);
-
 }
