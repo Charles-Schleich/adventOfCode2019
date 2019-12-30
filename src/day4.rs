@@ -54,12 +54,7 @@ fn part2 (set: Vec<i32>){
         }
     }
     println!("Part 2: {}",count);
-    // 389 == too high
-    // 190 == too low 
 }
-
-
-
 
 fn i32toVec(num: i32) -> Vec<i32>{
   let mut s: &str = &*num.to_string();
