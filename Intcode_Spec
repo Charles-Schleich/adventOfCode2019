@@ -1,0 +1,49 @@
+Intcode Specification
+
+Opcode 99 immediately halts 
+
+Opcode 1 adds together numbers read from two positions and stores the result in a third position.
+The three integers immediately after the opcode tell you these three positions - the first two indicate the positions from which you should read the input values, and the third indicates the position at which the output should be stored.
+    For example, [1,10,20,30]  reads value in pos 10 and 20, adds them, overwrites value in 30 
+
+
+Opcode 2 works exactly like opcode 1, except it multiplies the two inputs instead of adding them. Again, the three integers after the opcode indicate where the inputs and outputs are, not their values.
+    For example, [1,10,20,30]  reads value in pos 10 and 20, MULTIPLIES them, then overwrites value in 30 
+
+
+Opcode 3 takes a single integer as input and saves it to the position given by its only parameter. 
+    For example, the instruction 3,50 would take an input value and store it at address 50.
+
+
+Opcode 4 outputs the value of its only parameter. 
+    For example, the instruction 4,50 would output the value at address 50.
+
+
+Parameter modes
+
+0 - Position Mode
+    For example: If the parameter is 50, its value is the value stored at address 50 in memory.
+
+1 - Immediate Mode 
+    In immediate mode, a parameter is interpreted as a value
+    For example: If the parameter is 50, its value is simply 50.
+
+
+Opcodes 
+    - Opcode is 2 digit number based on ones and tens column
+    - First param mode in hundreds digit
+    - Second param mode in thousands digit
+    - Third param mode in ten-thousands digit
+    - Any missing modes are zero
+
+    For example
+    1002,4,3,4,33
+    Opcode         = 02 = multiply (3 params) 
+    1st param mode = 0 = position mode == arr[4] = 33 
+    2nd param mode = 1 = Immediate      = 3
+    3rd param mode = 0 = position mode  = pos 4
+    1002,4,3,4,33  ---->  1002,4,3,4,99
+
+Increment pointer by number of values in instruction
+ 
+

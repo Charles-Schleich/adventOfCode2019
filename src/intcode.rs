@@ -5,33 +5,58 @@ use math::round;
 #[path="./common.rs"]
 mod common ;
 
-pub fn intcode(mut arr : Vec<i32>)-> i32{
-
+pub fn intcode(mut arr : Vec<i32>, input: i32)-> i32{
+    println!("INT CODE START\n");
     let mut exit = false;
-    let mut multOf4 = 0;
+    let mut arrOffset = 0;
+    
     // processor in this loop
     while exit!=true{
-        let mut op = arr[0 + multOf4];
-        if op==99 {
-            println!("99 Exit found"); 
+        
+        let mut op = arr[0 + arrOffset];
+        let mut opMode = processOp(op);
+    
+        if opMode.op == 99 {
+            println!("99 found: Exit"); 
             break; 
         }
-        let opMode = processOp(op);
-
-        let (arga, argb, argc) = ( arr[1 + multOf4] 
-                                 , arr[2 + multOf4] 
-                                 , arr[3 + multOf4] );
-        let args = Args{argA:arga ,argB:argb ,argC:argc};
-        println!("Here {:?}",arr );
-        match opMode.op {
-            1=>arr = op1(arr,opMode,args),
-            2=>arr = op2(arr,opMode,args),
-            other=>panic!(),
-        }
-        println!("Here {:?}",arr );
-        multOf4=multOf4+4;
+        
+        opMode = getparams(&mut arr,arrOffset , opMode); 
+        arr = match opMode.op{
+            1 => { 
+                    arrOffset = arrOffset + 4;
+                    op1(arr,opMode)
+                },
+            2 => { 
+                    arrOffset = arrOffset + 4;
+                    op2(arr,opMode)
+                 },
+            3 => { 
+                    arrOffset = arrOffset + 2;
+                    op3(arr,opMode, input)
+                 },
+            4 => { 
+                    arrOffset = arrOffset + 2;
+                    op4(arr,opMode)
+                 },
+            _ => {unimplemented!()}
+        };
     }
     return arr[0];
+}
+
+
+fn getparams( arr : &mut Vec<i32>, arrOffset:usize,  mode: OpCodeMode) -> OpCodeMode{
+    let mut params :Vec<i32> = Vec::new();
+    for i in 1..mode.numArgs+1 {
+        let param = arr[arrOffset + i as usize];
+        params.push(param)
+    }
+    return OpCodeMode{ op: mode.op
+                     , params:params
+                     , modes:mode.modes
+                     , numArgs:mode.numArgs
+                     };
 }
 
 
@@ -41,26 +66,43 @@ pub fn intcode(mut arr : Vec<i32>)-> i32{
 //  | |  | ||  ___/  \___ \ 
 //  | |__| || |      ____) |
 //   \____/ |_|     |_____/ 
-                      
+
 // arr[posc]=a+b,
-fn op1(mut arr : Vec<i32>, mode:OpCodeMode, args:Args ) -> Vec<i32>{
-    let a = getArgValue(&arr, mode.var1Mode, args.argA );
-    let b = getArgValue(&arr, mode.var2Mode, args.argB );
-    let c = getArgValue(&arr, mode.var3Mode, args.argC );
+fn op1(mut arr : Vec<i32>, ocm:OpCodeMode ) -> Vec<i32>{
+    let a = getArgValue(&arr, ocm.modes[0], ocm.params[0] );
+    let b = getArgValue(&arr, ocm.modes[1], ocm.params[1] );
+    let c = ocm.params[2];
+    // let c = getArgValue(&arr, ocm.modes[2], ocm.params[2] );
+
     arr[c as usize]=a+b;
     return arr;
 }
 
+
 // arr[posc]=a*b,
-fn op2(mut arr : Vec<i32>, mode:OpCodeMode, args:Args ) -> Vec<i32>{
-    // println!("Arr: {:?} \n mode {:?} \n args {:?}",arr,mode,args);
-    let a = getArgValue(&arr, mode.var1Mode, args.argA );
-    let b = getArgValue(&arr, mode.var2Mode, args.argB );
-    let c = args.argC ; // write operation
-    // println!("a {:?}, b {:?}, c{:?} ",a,b,c );
+fn op2(mut arr : Vec<i32>, ocm:OpCodeMode ) -> Vec<i32>{
+    let a = getArgValue(&arr, ocm.modes[0], ocm.params[0] );
+    let b = getArgValue(&arr, ocm.modes[1], ocm.params[1] );
+    // let c = getArgValue(&arr, ocm.modes[2], ocm.params[2] );
+    let c = ocm.params[2];
     arr[c as usize]=a*b;
     return arr;
 }
+
+fn op3(mut arr : Vec<i32>, ocm:OpCodeMode, input:i32 ) -> Vec<i32>{
+    let a = ocm.params[0] as usize;
+    arr[a]=input;
+    return arr;
+}
+
+fn op4(mut arr : Vec<i32>, ocm:OpCodeMode) -> Vec<i32>{
+    let a = getArgValue(&arr, ocm.modes[0], ocm.params[0] );
+    // let a = ocm.params[0] as usize;
+    println!("{}",a);
+    return arr;
+}
+
+
 
 //   _    _  ______  _       _____   ______  _____    _____  
 //  | |  | ||  ____|| |     |  __ \ |  ____||  __ \  / ____| 
@@ -70,47 +112,41 @@ fn op2(mut arr : Vec<i32>, mode:OpCodeMode, args:Args ) -> Vec<i32>{
 //  |_|  |_||______||______||_|     |______||_|  \_\|_____/  
 
 fn processOp(op:i32) -> OpCodeMode {
-    let mut opStr: &str = &*op.to_string();
-    let mut z = opStr.chars().rev();
-    let (mut A,mut B,mut C) : (ParamMode,ParamMode,ParamMode) = (ParamMode::Pos,ParamMode::Pos,ParamMode::Pos) ;
-    let mut opA = String::from("");
-    let mut opB='0';
-    
-    for i in 0..5 {
-        let character = z.next();
-        if i == 0 {
-            match character{
-                Some(x) => opB=x,
-                None =>(),
-            }
-        }
-        if i == 1 {
-            match character{
-                Some(x) => opA.push(x),
-                None =>(),
-            }
-        } else if i == 2 {
-            A = determinParameter(character);
-        } else if i == 3 {
-            B = determinParameter(character);
-        } else if i == 4 {
-            C = determinParameter(character);
-        }
+    let mut opStr: &str = &*op.to_string();         // 1002
+    let mut z = opStr.chars().rev();    // 20010
+    let units = z.next().unwrap();
+    let tens = match z.next() {
+        Some(ch) =>{ch},
+        None =>{'0'}
+    };
+    let mut opcode = String::new();
+    opcode.push(tens);
+    opcode.push(units);
+    let opcodeNum = opcode.parse().unwrap();
+    let numArgs = getNumOfArgs(opcodeNum);
+    let mut modes: Vec<ParamMode>= Vec::new();
+
+    for i in 0..numArgs{
+        let paramMode = match z.next() {
+            Some(ch) =>{determineParamMode(ch)},
+            None           =>{determineParamMode('0')}
+        };
+        modes.push(paramMode);
     }
-    opA.push(opB);
-    let operationNum: i32 = opA.parse().unwrap();
-    return OpCodeMode{op:operationNum,var1Mode:A,var2Mode:B,var3Mode:C};
+
+    return OpCodeMode{ op:opcodeNum
+                     , params:Vec::new()
+                     , modes:modes
+                     , numArgs:numArgs};
 }
 
-fn determinParameter(input:Option<char>) -> ParamMode {
+
+fn determineParamMode(input:char) -> ParamMode {
     match input{
-        Some(x)=> match x { 
-            '0' =>  return ParamMode::Pos,
-            '1' => return ParamMode::Imm,
-            other => panic!()
-        },
-        None=> return ParamMode::Pos,
-    }
+        '0' =>  return ParamMode::Pos,
+        '1' => return ParamMode::Imm,
+        other => panic!()
+        }
 }
 
 fn getArgValue(arr : &Vec<i32>, mode: ParamMode, arg:i32 ) -> i32 {
@@ -119,6 +155,20 @@ fn getArgValue(arr : &Vec<i32>, mode: ParamMode, arg:i32 ) -> i32 {
         ParamMode::Pos => return arr[arg as usize] // Returns value at that position
     }
 }
+
+fn getNumOfArgs(op: i32) -> i32{
+    match op{
+        99 =>{0}
+        1 | 2 =>{3}
+        3 | 4 =>{1}
+        _ =>{ unimplemented!()}
+    }
+}
+
+
+
+
+
 
 //    _____  _______  _____   _    _   _____  _______  _____ 
 //   / ____||__   __||  __ \ | |  | | / ____||__   __|/ ____|
@@ -130,9 +180,9 @@ fn getArgValue(arr : &Vec<i32>, mode: ParamMode, arg:i32 ) -> i32 {
 #[derive(Debug)]
 struct OpCodeMode {
     op: i32,
-    var1Mode: ParamMode,
-    var2Mode: ParamMode,
-    var3Mode: ParamMode
+    modes: Vec<ParamMode>,
+    params: Vec<i32>,
+    numArgs: i32
 }
 
 #[derive(Debug)]
@@ -142,7 +192,7 @@ struct Args {
     argC: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Copy,Clone)]
 enum ParamMode {
     Imm,
     Pos,

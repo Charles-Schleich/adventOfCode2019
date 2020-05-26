@@ -10,19 +10,18 @@ mod intcode ;
 
 
 pub fn main(){
-    let resultNumArr = common::readCSVIntoIntList("input5.txt");
-    let mut arr = resultNumArr.unwrap();
+    let arr = common::readCSVIntoIntList("input5.txt").unwrap();
     let finalVal = part1(arr.clone());
-
 }
 //ABC DE
 //010 02
 
 fn part1(mut arr : Vec<i32>)-> i32{
-    println!("{:?}",arr);
-    // let x = intcode::processOp(arr[0]);
-    let x = intcode::intcode(arr);
-    println!("{:?}",x);
+    
+    let input = 1;
+    let finalVal = intcode::intcode(arr,input);
+    println!("{:?}",finalVal);
+
     return 0;
 }
 
